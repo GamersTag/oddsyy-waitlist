@@ -1,10 +1,7 @@
 const ITEMS = [
-  { icon: '🏠', label: 'Home Services' }, { icon: '🔧', label: 'Repairs & Fixes' },
-  { icon: '📚', label: 'Tutoring' },      { icon: '📦', label: 'Deliveries' },
-  { icon: '🧹', label: 'Cleaning' },      { icon: '✨', label: 'Weird & Fun' },
-  { icon: '💻', label: 'Tech Help' },     { icon: '💅', label: 'Beauty' },
-  { icon: '🚗', label: 'Transport' },     { icon: '🎨', label: 'Creative' },
-  { icon: '🎉', label: 'Events' },        { icon: '✍️', label: 'Writing' },
+  'Home Services', 'Repairs & Fixes', 'Tutoring', 'Deliveries',
+  'Cleaning', 'Tech Help', 'Beauty & Grooming', 'Transport',
+  'Creative Work', 'Events', 'Writing', 'Photography',
 ]
 const ALL = [...ITEMS, ...ITEMS]
 
@@ -13,10 +10,10 @@ export default function Marquee() {
     <div className="marquee-wrap">
       <div className="marquee-track">
         {ALL.map((item, i) => (
-          <div key={i} style={{ display: 'contents' }}>
-            <div className="marquee-item"><span>{item.icon}</span> {item.label}</div>
-            <div className="marquee-dot" />
-          </div>
+          <span key={i} style={{ display: 'contents' }}>
+            <span className="marquee-item">{item}</span>
+            <span className="marquee-sep" />
+          </span>
         ))}
       </div>
     </div>

@@ -3,9 +3,9 @@ import { gsap } from 'gsap'
 import { useWaitlist } from '../hooks/useWaitlist'
 
 const ROLES = [
-  { id: 'seeker',  icon: '🔍', name: 'Seeker',  sub: 'I have requests' },
-  { id: 'hustler', icon: '⚡', name: 'Hustler', sub: 'I fulfill them' },
-  { id: 'both',    icon: '✌️', name: 'Both',    sub: "I'm all in" },
+  { id: 'seeker',  name: 'Seeker',   sub: 'I have requests' },
+  { id: 'hustler', name: 'Hustler',  sub: 'I fulfill them'  },
+  { id: 'both',    name: 'Both',     sub: "I'm all in"      },
 ]
 
 export default function WaitlistForm() {
@@ -22,19 +22,18 @@ export default function WaitlistForm() {
   }
 
   function shake() {
-    gsap.fromTo(cardRef.current, { x: -6 }, { x: 0, duration: 0.4, ease: 'elastic.out(1,0.3)' })
-  }
-
-  function pickRole(el, id) {
-    setRole(id)
-    gsap.fromTo(el, { scale: 0.95 }, { scale: 1, duration: 0.3, ease: 'back.out(2)' })
+    gsap.fromTo(cardRef.current, { x: -5 }, { x: 0, duration: 0.35, ease: 'elastic.out(1,0.3)' })
   }
 
   if (success) return (
     <div className="form-card" ref={cardRef}>
       <div className="success-view">
-        <div className="success-icon">🎉</div>
-        <h3>You're on the list!</h3>
+        <div className="success-icon">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="4 10 8 14 16 6" />
+          </svg>
+        </div>
+        <h3>You're on the list</h3>
         <p>We'll reach out the moment Oddsyy goes live in Lahore.</p>
       </div>
     </div>
@@ -42,32 +41,54 @@ export default function WaitlistForm() {
 
   return (
     <form className="form-card" ref={cardRef} onSubmit={handleSubmit}>
-      <p className="form-label">Get early access 🚀</p>
+      <p className="form-heading">Get early access</p>
+
       <div className="field">
-        <label htmlFor="name">Your name</label>
-        <input id="name" type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Your Name" />
+        <label htmlFor="name">Name</label>
+        <input
+          id="name"
+          type="text"
+          value={name}
+          onChange={e => setName(e.target.value)}
+          placeholder="Your name"
+          autoComplete="name"
+        />
       </div>
+
       <div className="field">
-        <label htmlFor="email">Email address</label>
-        <input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" />
+        <label htmlFor="email">Email</label>
+        <input
+          id="email"
+          type="email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          placeholder="you@example.com"
+          autoComplete="email"
+        />
       </div>
-      <p className="role-title">I want to join as</p>
-      <div className="role-grid">
+
+      <p className="role-label">I want to join as</p>
+      <div className="role-seg">
         {ROLES.map(r => (
-          <button key={r.id} type="button"
-            className={`role-btn ${role === r.id ? 'active' : ''}`}
-            onClick={e => pickRole(e.currentTarget, r.id)}>
-            <span className="rb-icon">{r.icon}</span>
-            <span className="rb-name">{r.name}</span>
-            <span className="rb-sub">{r.sub}</span>
+          <button
+            key={r.id}
+            type="button"
+            className={`role-seg-btn ${role === r.id ? 'active' : ''}`}
+            onClick={() => setRole(r.id)}
+          >
+            <span className="rsb-name">{r.name}</span>
+            <span className="rsb-sub">{r.sub}</span>
           </button>
         ))}
       </div>
+
       {error && <p className="err">{error}</p>}
+
       <button type="submit" className="submit-btn" disabled={loading}>
-        {loading ? 'Reserving...' : 'Reserve my spot →'}
+        {loading ? 'Reserving…' : 'Reserve my spot'}
       </button>
-      <p className="form-note">No spam. We'll only reach out when we launch.</p>
+
+      <p className="form-note">No spam — only a launch notification.</p>
     </form>
   )
 }

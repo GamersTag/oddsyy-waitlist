@@ -45,7 +45,7 @@ export default function Hero() {
       <div className="hero-left" ref={leftRef}>
         <div className="eyebrow reveal">Early Access</div>
         <h1 className="hero-title reveal">Post it.<br /><em>Someone's on it.</em></h1>
-        <p className="hero-sub reveal">From home tutors to painters, photographers to party wizards — find local people who get things done.</p>
+        <p className="hero-sub reveal">Describe what you need. Local people in Lahore bid on it and get it done — from home services to creative work.</p>
         <div className="proof reveal">
           <div className="avatars">
             {AVATARS.map((av, i) => (
