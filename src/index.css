@@ -59,24 +59,19 @@ body {
 .nav-pill {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.45rem;
   background: oklch(72% 0.22 320 / 0.1);
   border: 1px solid oklch(72% 0.22 320 / 0.25);
   color: oklch(78% 0.14 320);
   border-radius: 100px;
-  padding: 0.4rem 1rem;
-  font-size: 0.8rem;
-  font-weight: 500;
+  padding: 0.38rem 0.9rem 0.38rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
-.pulse-dot {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: oklch(72% 0.22 320);
-  animation: pulse 2s ease infinite;
-}
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(0.8); }
+.nav-pill-flag {
+  font-size: 0.95rem;
+  line-height: 1;
 }
 
 /* ─── Hero ─── */
