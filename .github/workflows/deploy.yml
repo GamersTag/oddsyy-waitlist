@@ -33,4 +33,4 @@ jobs:
         run: npm run build
 
       - name: Deploy to Firebase Hosting
-        run: npx firebase-tools@15.27.0 deploy --only hosting --token "${{ secrets.FIREBASE_TOKEN }}" --project oddsyy-79 --non-interactive --debug
+        run: npx firebase-tools@15.27.0 deploy --only hosting --token "${{ secrets.FIREBASE_TOKEN }}" --project oddsyy-79 --non-interactive
