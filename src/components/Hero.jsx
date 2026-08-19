@@ -3,13 +3,14 @@ import { gsap } from 'gsap'
 import { db } from '../lib/firebase'
 import { collection, getCountFromServer } from 'firebase/firestore'
 import WaitlistForm from './WaitlistForm'
+import Ostrich from './Ostrich'
 
 const AVATARS = [
-  { initials: 'AK', color: 'oklch(52% 0.22 320)' },
-  { initials: 'SR', color: 'oklch(60% 0.18 30)' },
-  { initials: 'MZ', color: 'oklch(65% 0.15 165)' },
-  { initials: 'FH', color: 'oklch(55% 0.2 280)' },
-  { initials: 'NB', color: 'oklch(45% 0.18 320)' },
+  { initials: 'AK', color: '#5A1226' },
+  { initials: 'SR', color: '#B43A60' },
+  { initials: 'MZ', color: '#7E2440' },
+  { initials: 'FH', color: '#8C4A2F' },
+  { initials: 'NB', color: '#6B2350' },
 ]
 
 export default function Hero() {
@@ -43,6 +44,7 @@ export default function Hero() {
   return (
     <div className="hero">
       <div className="hero-left" ref={leftRef}>
+        <Ostrich size={76} className="hero-mascot reveal" />
         <div className="eyebrow reveal">Early Access</div>
         <h1 className="hero-title reveal">Post it.<br /><em>Someone's on it.</em></h1>
         <p className="hero-sub reveal">From home tutors to painters, photographers to party wizards — find local people who get things done.</p>
