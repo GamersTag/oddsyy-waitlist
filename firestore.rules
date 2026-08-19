@@ -2,11 +2,15 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /waitlist/{docId} {
-      allow read: if false;
+      // Allow list/count so the counter and duplicate-email check work
+      allow list: if true;
+      // Allow new signups with required fields
       allow create: if request.resource.data.keys().hasAll(['name', 'email', 'role', 'created_at'])
                    && request.resource.data.name is string
                    && request.resource.data.email is string
                    && request.resource.data.role in ['seeker', 'hustler', 'both'];
+      // No direct reads, updates, or deletes from the client
+      allow get, update, delete: if false;
     }
     match /{document=**} {
       allow read, write: if false;
