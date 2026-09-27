@@ -21,8 +21,8 @@ The landing page and waitlist for **Oddsyy**, the local task marketplace launchi
   same email is an update, which the rules deny, and the form shows "You're already on the list".
 - **Nobody can read the waitlist from the website.** `firestore.rules` allows public *create* only.
   (Rules can't tell a count query from a full list, so there is no public counter.)
-- **`/admin`** uses Google sign-in. Only the Google accounts listed in `isAdmin()` in
-  `firestore.rules` can read, export (CSV) or delete entries. There is no password in the app bundle.
+- **`/admin`** uses Google sign-in. Only Google accounts with a document in the private `admins`
+  collection can read, export (CSV) or delete entries. There is no password in the app bundle.
 - **Anti-spam:** a hidden honeypot field; strict field validation in the rules.
 - **Security headers** (CSP, frame blocking, nosniff, referrer and permissions policies) are set in
   `firebase.json`.
@@ -56,7 +56,10 @@ Secrets used: `VITE_FIREBASE_*` (6) and `FIREBASE_TOKEN`. When setting a secret 
 ## Admin access
 
 1. Firebase console → `oddsyy-79` → Authentication → Sign-in method → enable **Google** (one time).
-2. Add or remove staff emails in `isAdmin()` in `firestore.rules`, then push to `main`.
+2. Firebase console → Firestore → start collection **`admins`** → add a document whose **ID is the
+   staff member's Google email** (any field, e.g. `note: "founder"`). Delete the document to remove access.
+   The list lives in the database rather than in `firestore.rules` because this repository is public;
+   nobody can read or change it from the website.
 3. Open https://oddsyy.com/admin and sign in with that Google account.
 
 ## Privacy
@@ -73,5 +76,5 @@ The waitlist exists only to invite people when the app launches. After launch:
 2. **Launch + 2 weeks:** replace the form with a "Get the app" page (Play Store link) or point
    `oddsyy.com` at the app's own website on `oddsyy-app-prod` Hosting (DNS change at Hostinger).
 3. **No later than 6 months after launch** (the promise on `/privacy`): delete every document in
-   `waitlist`, delete exported CSVs, and remove the staff emails from the rules.
+   `waitlist` and `admins`, and delete exported CSVs.
 4. Disable billing on `oddsyy-79`, delete the `FIREBASE_TOKEN` secret, and archive this repository.

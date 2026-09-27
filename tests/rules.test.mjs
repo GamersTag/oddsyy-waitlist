@@ -27,9 +27,11 @@ before(async () => {
 after(async () => { await env?.cleanup() })
 beforeEach(async () => {
   await env.clearFirestore()
-  // One legacy entry with a random ID, like the documents already in production
   await env.withSecurityRulesDisabled(async ctx => {
+    // One legacy entry with a random ID, like the documents already in production
     await setDoc(doc(ctx.firestore(), 'waitlist', 'legacyRandomId'), { name: 'Old', email: 'old@example.com', role: 'both' })
+    // Staff allow-list, as created by the owner in the Firebase console
+    await setDoc(doc(ctx.firestore(), 'admins', 'staff@example.com'), { note: 'test admin' })
   })
 })
 
@@ -67,14 +69,16 @@ describe('public visitor', () => {
     await assertFails(setDoc(doc(d, 'waitlist', sha('gus@example.com')), { ...entry('gus@example.com'), name: 'x'.repeat(101) }))
     await assertFails(setDoc(doc(d, 'waitlist', sha('hal@example.com')), { ...entry('hal@example.com'), name: '' }))
   })
-  test('cannot touch any other collection', async () => {
+  test('cannot touch any other collection, including the admin allow-list', async () => {
     await assertFails(getDocs(collection(db(), 'stats')))
+    await assertFails(getDoc(doc(db(), 'admins', 'staff@example.com')))
+    await assertFails(setDoc(doc(db(), 'admins', 'me@example.com'), { x: 1 }))
     await assertFails(setDoc(doc(db(), 'anything', 'x'), { a: 1 }))
   })
 })
 
 describe('admin (Google sign-in, allow-listed email)', () => {
-  const admin = () => env.authenticatedContext('admin1', google('bunnydevs789@gmail.com')).firestore()
+  const admin = () => env.authenticatedContext('admin1', google('staff@example.com')).firestore()
 
   test('can list and read sign-ups', async () => {
     await assertSucceeds(getDocs(collection(admin(), 'waitlist')))
@@ -90,17 +94,22 @@ describe('admin (Google sign-in, allow-listed email)', () => {
 })
 
 describe('everyone else signed in', () => {
+  test('an admin cannot add themselves or others to the allow-list', async () => {
+    const db = env.authenticatedContext('admin1', google('staff@example.com')).firestore()
+    await assertFails(setDoc(doc(db, 'admins', 'friend@example.com'), { x: 1 }))
+    await assertFails(getDocs(collection(db, 'admins')))
+  })
   test('a non-allow-listed Google account cannot read', async () => {
     const db = env.authenticatedContext('u2', google('someone@gmail.com')).firestore()
     await assertFails(getDocs(collection(db, 'waitlist')))
   })
   test('an allow-listed email with an unverified address cannot read', async () => {
-    const db = env.authenticatedContext('u3', google('bunnydevs789@gmail.com', false)).firestore()
+    const db = env.authenticatedContext('u3', google('staff@example.com', false)).firestore()
     await assertFails(getDocs(collection(db, 'waitlist')))
   })
   test('an allow-listed email from a non-Google provider cannot read', async () => {
     const db = env.authenticatedContext('u4', {
-      email: 'bunnydevs789@gmail.com', email_verified: true, firebase: { sign_in_provider: 'password' },
+      email: 'staff@example.com', email_verified: true, firebase: { sign_in_provider: 'password' },
     }).firestore()
     await assertFails(getDocs(collection(db, 'waitlist')))
   })

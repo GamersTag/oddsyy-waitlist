@@ -2,16 +2,14 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Staff who may read the waitlist in /admin (Google sign-in only).
-    // Edit this list to change who has access, then deploy the rules.
+    // Staff who may use /admin: Google sign-in, verified email, and a document
+    // at admins/{email} (created by the project owner in the Firebase console).
+    // The list lives in the database, not here, because this repo is public.
     function isAdmin() {
       return request.auth != null
         && request.auth.token.firebase.sign_in_provider == 'google.com'
         && request.auth.token.email_verified == true
-        && request.auth.token.email in [
-             'bunnydevs789@gmail.com',
-             'abubakar.789bajwa@gmail.com'
-           ];
+        && exists(/databases/$(database)/documents/admins/$(request.auth.token.email));
     }
 
     match /waitlist/{docId} {
@@ -39,6 +37,11 @@ service cloud.firestore {
       // gets no read access at all.
       allow read, delete: if isAdmin();
       allow update: if false;
+    }
+
+    // Allow-list of staff emails. Managed only from the Firebase console.
+    match /admins/{email} {
+      allow read, write: if false;
     }
 
     match /{document=**} {
