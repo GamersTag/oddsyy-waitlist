@@ -28,7 +28,7 @@ export default function Examples() {
   return (
     <section className="section" style={{ paddingTop: 0 }}>
       <div className="section-inner" ref={ref}>
-        <p className="s-label">Real requests</p>
+        <p className="s-label">Example requests</p>
         <h2 className="s-title">From everyday<br /><em>to unexpected.</em></h2>
         <div className="ex-grid">
           {EXAMPLES.map((ex, i) => (

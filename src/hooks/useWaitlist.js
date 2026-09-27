@@ -1,37 +1,53 @@
 import { useState } from 'react'
-import { db } from '../lib/firebase'
-import { collection, addDoc, query, where, getDocs, serverTimestamp } from 'firebase/firestore'
+
+export const ROLES = ['seeker', 'hustler', 'both']
+const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
+
+export function normaliseEmail(email) {
+  return email.trim().toLowerCase()
+}
+
+export function isValidEmail(email) {
+  const e = normaliseEmail(email)
+  return e.length <= 254 && EMAIL_RE.test(e)
+}
 
 export function useWaitlist() {
   const [loading, setLoading] = useState(false)
-  const [error, setError]   = useState(null)
+  const [error, setError] = useState(null)
   const [success, setSuccess] = useState(false)
+  const [alreadyJoined, setAlreadyJoined] = useState(false)
 
-  async function submit({ name, email, role }) {
+  // `trap` is a hidden honeypot field; people never fill it, simple bots do.
+  async function submit({ name, email, role, trap }) {
+    if (trap) { setSuccess(true); return }
+    const cleanName = name.trim()
+    const cleanEmail = normaliseEmail(email)
+    if (!cleanName || cleanName.length > 100 || !isValidEmail(cleanEmail) || !ROLES.includes(role)) {
+      setError('Please check your name and email.')
+      return
+    }
+
     setLoading(true)
     setError(null)
     try {
-      // Check for duplicate email
-      const q = query(collection(db, 'waitlist'), where('email', '==', email.toLowerCase().trim()))
-      const snap = await getDocs(q)
-      if (!snap.empty) {
-        setError("You're already on the list!")
-        setLoading(false)
-        return
-      }
-      await addDoc(collection(db, 'waitlist'), {
-        name:       name.trim(),
-        email:      email.toLowerCase().trim(),
-        role,
-        created_at: serverTimestamp(),
-      })
+      // The waitlist can't be read from the browser, so duplicates are caught by
+      // the write itself: the same email maps to the same doc, and the rules
+      // deny overwriting an existing doc.
+      const { saveSignup } = await import('../lib/signup')
+      await saveSignup({ name: cleanName, email: cleanEmail, role })
       setSuccess(true)
     } catch (err) {
-      console.error(err)
-      setError('Something went wrong. Please try again.')
+      if (err?.code === 'permission-denied') {
+        setAlreadyJoined(true)
+        setSuccess(true)
+      } else {
+        console.error(err)
+        setError('Something went wrong. Please try again.')
+      }
     }
     setLoading(false)
   }
 
-  return { submit, loading, error, success }
+  return { submit, loading, error, success, alreadyJoined }
 }

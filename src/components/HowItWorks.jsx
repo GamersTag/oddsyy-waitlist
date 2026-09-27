@@ -6,7 +6,7 @@ gsap.registerPlugin(ScrollTrigger)
 const STEPS = [
   { n: '1', title: 'Post your request', body: 'Describe what you need, set a budget and deadline. Takes 60 seconds.' },
   { n: '2', title: 'Get offers from Hustlers', body: 'Local people who can help send their price and message. You pick who to hire.' },
-  { n: '3', title: 'Get it done', body: "Chat, confirm, pay — all in one place. Rate your Hustler when it's done." },
+  { n: '3', title: 'Get it done', body: "Chat, agree the details and get it done. Then rate each other so good people rise to the top." },
 ]
 
 export default function HowItWorks() {

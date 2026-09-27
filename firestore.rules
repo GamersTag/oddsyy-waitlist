@@ -1,17 +1,46 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /waitlist/{docId} {
-      // Allow list/count so the counter and duplicate-email check work
-      allow list: if true;
-      // Allow new signups with required fields
-      allow create: if request.resource.data.keys().hasAll(['name', 'email', 'role', 'created_at'])
-                   && request.resource.data.name is string
-                   && request.resource.data.email is string
-                   && request.resource.data.role in ['seeker', 'hustler', 'both'];
-      // No direct reads, updates, or deletes from the client
-      allow get, update, delete: if false;
+
+    // Staff who may read the waitlist in /admin (Google sign-in only).
+    // Edit this list to change who has access, then deploy the rules.
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.firebase.sign_in_provider == 'google.com'
+        && request.auth.token.email_verified == true
+        && request.auth.token.email in [
+             'bunnydevs789@gmail.com',
+             'abubakar.789bajwa@gmail.com'
+           ];
     }
+
+    match /waitlist/{docId} {
+      // Sign-ups are write-only from the public site. The doc ID is the SHA-256
+      // hex of the trimmed, lower-cased email, so a repeat sign-up targets an
+      // existing doc, counts as an update, and is denied -- that's the
+      // duplicate check. Nothing about other sign-ups is ever readable.
+      allow create: if docId.matches('^[0-9a-f]{64}$')
+                   && request.resource.data.keys().hasAll(['name', 'email', 'role', 'created_at'])
+                   && request.resource.data.keys().hasOnly(['name', 'email', 'role', 'created_at'])
+                   && request.resource.data.name is string
+                   && request.resource.data.name.size() > 0
+                   && request.resource.data.name.size() <= 100
+                   && request.resource.data.email is string
+                   && request.resource.data.email.size() <= 254
+                   && request.resource.data.email == request.resource.data.email.trim().lower()
+                   && request.resource.data.email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')
+                   // Bind the ID to the email so nobody can squat someone else's slot
+                   && docId == hashing.sha256(request.resource.data.email).toHexString().lower()
+                   && request.resource.data.role in ['seeker', 'hustler', 'both']
+                   && request.resource.data.created_at == request.time;
+
+      // Only staff can read (the admin export) or delete (privacy requests).
+      // Rules can't tell a count query from a full list, so the public site
+      // gets no read access at all.
+      allow read, delete: if isAdmin();
+      allow update: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

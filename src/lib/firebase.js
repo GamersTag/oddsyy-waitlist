@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app'
-import { getFirestore } from 'firebase/firestore'
+import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore/lite'
 
 const firebaseConfig = {
   apiKey:            import.meta.env.VITE_FIREBASE_API_KEY,
@@ -10,5 +10,11 @@ const firebaseConfig = {
   appId:             import.meta.env.VITE_FIREBASE_APP_ID,
 }
 
-const app = initializeApp(firebaseConfig)
+export const app = initializeApp(firebaseConfig)
 export const db = getFirestore(app)
+
+// Local testing only, e.g. VITE_FIRESTORE_EMULATOR=127.0.0.1:8080 npm run dev
+if (import.meta.env.DEV && import.meta.env.VITE_FIRESTORE_EMULATOR) {
+  const [host, port] = import.meta.env.VITE_FIRESTORE_EMULATOR.split(':')
+  connectFirestoreEmulator(db, host, Number(port))
+}

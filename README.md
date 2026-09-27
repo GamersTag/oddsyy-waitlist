@@ -1,75 +1,77 @@
-# React + TypeScript + Vite
+# oddsyy.com — pre-launch waitlist (legacy)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The landing page and waitlist for **Oddsyy**, the local task marketplace launching in Lahore.
 
-Currently, two official plugins are available:
+> **Status: legacy, pre-launch only.** This site is deliberately kept separate from the Oddsyy app
+> (repo `Oddsyy-App`, Firebase projects `oddsyy-app-dev` / `oddsyy-app-prod`). It shares nothing with
+> the app except the brand. When the app launches it is retired — see [Retirement](#retirement).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+| | |
+|---|---|
+| Live URL | https://oddsyy.com (and www) |
+| Firebase project | `oddsyy-79` — **with** a hyphen. Not `oddsyy79` (legacy app project) |
+| Firestore region | `asia-south1` |
+| Stack | React 19 + Vite, plain JSX, GSAP, Firebase JS SDK (Firestore Lite, Auth for `/admin` only) |
+| Pages | `/` landing + form · `/privacy` waitlist privacy notice · `/admin` staff view |
 
-## React Compiler
+## How it works
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+- **Sign-up** writes one document to `waitlist/{sha256(email)}` with `name`, `email`, `role`, `created_at`.
+  Using the hash of the lower-cased email as the ID makes duplicates impossible: a second sign-up with the
+  same email is an update, which the rules deny, and the form shows "You're already on the list".
+- **Nobody can read the waitlist from the website.** `firestore.rules` allows public *create* only.
+  (Rules can't tell a count query from a full list, so there is no public counter.)
+- **`/admin`** uses Google sign-in. Only the Google accounts listed in `isAdmin()` in
+  `firestore.rules` can read, export (CSV) or delete entries. There is no password in the app bundle.
+- **Anti-spam:** a hidden honeypot field; strict field validation in the rules.
+- **Security headers** (CSP, frame blocking, nosniff, referrer and permissions policies) are set in
+  `firebase.json`.
+- Firebase is loaded only when someone submits the form or opens `/admin`, so the landing page stays light.
 
-Note: This will impact Vite dev & build performances.
+## Develop
 
-## Expanding the ESLint configuration
+Requires Node 22+ and Java 21+ (for the Firebase emulators).
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm ci
+npm run dev:emulators   # site on http://localhost:5174 against local Firestore + Auth emulators
+npm run dev             # site against the real project (needs .env.local — writes are real!)
+npm run lint
+npm run test:rules      # security-rules tests on the Firestore emulator
+npm run build
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+`.env.local` (not committed) holds the six `VITE_FIREBASE_*` values from Firebase console →
+Project settings → Your apps. `.env.emulator` (committed) holds fake values for emulator mode.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Deploy
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Push to `main`. GitHub Actions (`.github/workflows/deploy.yml`) lints, runs the rules tests and a
+dependency audit, then builds and deploys **hosting and Firestore rules** together to `oddsyy-79`.
+Pull requests run the checks only.
+
+Secrets used: `VITE_FIREBASE_*` (6) and `FIREBASE_TOKEN`. When setting a secret from PowerShell use
+`gh secret set NAME --body "$value"` — piping adds a byte-order mark and corrupts it.
+
+## Admin access
+
+1. Firebase console → `oddsyy-79` → Authentication → Sign-in method → enable **Google** (one time).
+2. Add or remove staff emails in `isAdmin()` in `firestore.rules`, then push to `main`.
+3. Open https://oddsyy.com/admin and sign in with that Google account.
+
+## Privacy
+
+What is collected and why is published at `/privacy`. Deletion requests go to the address in
+`src/config.js`; delete the entry from `/admin` within 7 days. Don't copy the list into other tools
+except the email service used for launch invites.
+
+## Retirement
+
+The waitlist exists only to invite people when the app launches. After launch:
+
+1. **Launch week:** export the CSV from `/admin`; invite Hustlers first, then Seekers, in waves.
+2. **Launch + 2 weeks:** replace the form with a "Get the app" page (Play Store link) or point
+   `oddsyy.com` at the app's own website on `oddsyy-app-prod` Hosting (DNS change at Hostinger).
+3. **No later than 6 months after launch** (the promise on `/privacy`): delete every document in
+   `waitlist`, delete exported CSVs, and remove the staff emails from the rules.
+4. Disable billing on `oddsyy-79`, delete the `FIREBASE_TOKEN` secret, and archive this repository.

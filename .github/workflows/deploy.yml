@@ -1,25 +1,52 @@
-name: Build & Deploy to Firebase
+name: Check & deploy waitlist
 
 on:
+  pull_request:
   push:
     branches: [main]
 
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
 jobs:
-  deploy:
+  check:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
-      - name: Install dependencies
-        run: npm ci
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - run: npm ci
+      - run: npm run lint
+      - name: Security-rules tests (Firestore emulator)
+        run: npm run test:rules
+      - run: npm audit --omit=dev --audit-level=high
+
+  deploy:
+    needs: check
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
 
       - name: Build
         env:
@@ -29,8 +56,8 @@ jobs:
           VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
           VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
-          VITE_ADMIN_PASSWORD: ${{ secrets.VITE_ADMIN_PASSWORD }}
         run: npm run build
 
-      - name: Deploy to Firebase Hosting
-        run: npx firebase-tools@15.27.0 deploy --only hosting --token "${{ secrets.FIREBASE_TOKEN }}" --project oddsyy-79 --non-interactive
+      # Rules ship with every deploy so the repo and production can't drift apart.
+      - name: Deploy hosting + Firestore rules
+        run: npx -y firebase-tools@15.27.0 deploy --only hosting,firestore:rules --project oddsyy-79 --non-interactive --token "${{ secrets.FIREBASE_TOKEN }}"
