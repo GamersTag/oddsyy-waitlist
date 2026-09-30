@@ -1,12 +1,26 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="oddsyy">
+  <defs>
+    <filter id="rough" x="-25%" y="-25%" width="150%" height="150%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.013 0.017" numOctaves="2" seed="6" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="3" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
   <rect width="64" height="64" rx="14" fill="#5A1226"/>
-  <g fill="none" stroke="#F6EFE7" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M38 22C34 26 31 29 29 33"/>
-    <path d="M24 47L21 56"/>
-    <path d="M31 47L34 56"/>
-  </g>
-  <ellipse cx="25" cy="38" rx="13" ry="9.5" fill="#F6EFE7"/>
-  <circle cx="40" cy="18" r="5.5" fill="#F6EFE7"/>
-  <path d="M45 16.5L54 19L45 21.5Z" fill="#D9577A"/>
-  <circle cx="41.6" cy="16.8" r="1.25" fill="#5A1226"/>
+  <!-- The ostrich head (small-size crop of the brand mark). The full-body ostrich is mascot-only. -->
+  <svg x="10.5" y="10.5" width="43" height="43" viewBox="40 90 330 330">
+    <g filter="url(#rough)" fill="none" stroke="#F6EFE7" stroke-width="20" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M198 150 C228 118 288 124 306 166 L318 154 L324 184 L338 174 L344 202 C340 244 330 370 322 540"/>
+      <path d="M198 150 C175 168 167 190 172 208"/>
+      <path d="M172 208 L68 250 L62 260 L150 236"/>
+      <path d="M120 248 L92 270 L168 252"/>
+      <path d="M116 251 L164 240"/>
+      <path d="M168 252 C192 274 200 390 194 540"/>
+      <path d="M150 190 L206 182 L210 208 L160 214 Z"/>
+      <path d="M218 184 L258 190 L252 212 L214 208 Z"/>
+      <path d="M206 192 L218 190"/>
+      <path d="M172 173 q14 -7 26 -1"/>
+      <path d="M220 175 q12 -5 22 1"/>
+      <path d="M150 218 l11 -2"/>
+    </g>
+  </svg>
 </svg>

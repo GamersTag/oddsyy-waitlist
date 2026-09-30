@@ -29,7 +29,7 @@
         ]
       },
       {
-        "source": "/favicon.svg",
+        "source": "/@(favicon.svg|favicon-32.png|apple-touch-icon.png)",
         "headers": [
           { "key": "Cache-Control", "value": "public, max-age=86400" }
         ]
