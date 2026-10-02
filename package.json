@@ -31,5 +31,8 @@
   "description": "Oddsyy pre-launch waitlist (oddsyy.com). Legacy: retired after the app launches.",
   "engines": {
     "node": ">=22"
+  },
+  "overrides": {
+    "@grpc/grpc-js": "^1.14.5"
   }
 }
