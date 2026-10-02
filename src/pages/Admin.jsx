@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth'
-import { collection, query, orderBy, getDocs, doc, deleteDoc } from 'firebase/firestore/lite'
+import { collection, query, orderBy, getDocs, doc, writeBatch, increment } from 'firebase/firestore/lite'
 import { db } from '../lib/firebase'
 import { auth, googleProvider } from '../lib/auth'
 
@@ -90,7 +90,11 @@ export default function Admin() {
   async function remove(entry) {
     if (!window.confirm(`Delete ${entry.email} from the waitlist? This can't be undone.`)) return
     try {
-      await deleteDoc(doc(db, 'waitlist', entry.id))
+      // Delete and lower the public count together, so the landing page stays accurate.
+      const batch = writeBatch(db)
+      batch.delete(doc(db, 'waitlist', entry.id))
+      batch.update(doc(db, 'stats', 'waitlist'), { count: increment(-1) })
+      await batch.commit()
       setEntries(list => list.filter(e => e.id !== entry.id))
     } catch {
       window.alert('Could not delete this entry.')

@@ -170,6 +170,48 @@ body {
   padding: 0.4rem 0.9rem;
 }
 
+/* ─── Live waiting count (real number from stats/waitlist) ─── */
+.waiting {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 1.25rem;
+  font-size: 1rem;
+  color: var(--wine);
+}
+.waiting-num {
+  display: inline-block;
+  font-family: var(--display);
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--maroon);
+  font-variant-numeric: tabular-nums;
+}
+.waiting-dot {
+  position: relative;
+  flex-shrink: 0;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background: var(--green);
+}
+.waiting-dot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--green);
+  animation: waiting-pulse 2s ease-out infinite;
+}
+@keyframes waiting-pulse {
+  from { transform: scale(1); opacity: 0.55; }
+  to   { transform: scale(2.6); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .waiting-dot::after { animation: none; }
+}
+
 /* ─── Reveal animations (GSAP initial state) ─── */
 .reveal {
   opacity: 0;

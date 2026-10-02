@@ -39,6 +39,26 @@ service cloud.firestore {
       allow update: if false;
     }
 
+    // The public sign-up count shown on the landing page — the only number
+    // anyone can read. A visitor can raise it by exactly one, and only in the
+    // same write as a brand-new sign-up: `last` names that sign-up, which must
+    // not exist before the write and must exist after it. So the count can't be
+    // inflated without adding real sign-ups, and each sign-up counts once.
+    // Staff keep it in step when they delete an entry.
+    match /stats/waitlist {
+      allow get: if true;
+      allow update: if request.resource.data.keys().hasOnly(['count', 'last'])
+                   && request.resource.data.count == resource.data.count + 1
+                   && request.resource.data.last is string
+                   && request.resource.data.last.matches('^[0-9a-f]{64}$')
+                   && !exists(/databases/$(database)/documents/waitlist/$(request.resource.data.last))
+                   && existsAfter(/databases/$(database)/documents/waitlist/$(request.resource.data.last));
+      allow update: if isAdmin()
+                   && request.resource.data.keys().hasOnly(['count', 'last'])
+                   && request.resource.data.count is int
+                   && request.resource.data.count >= 0;
+    }
+
     // Allow-list of staff emails. Managed only from the Firebase console.
     match /admins/{email} {
       allow read, write: if false;

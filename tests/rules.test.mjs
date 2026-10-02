@@ -2,13 +2,14 @@
 // (starts the Firestore emulator, runs this file, stops the emulator).
 import { readFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
+import assert from 'node:assert/strict'
 import { after, before, beforeEach, describe, test } from 'node:test'
 import {
   initializeTestEnvironment, assertFails, assertSucceeds,
 } from '@firebase/rules-unit-testing'
 import {
   collection, doc, setDoc, getDoc, getDocs, deleteDoc, getCountFromServer,
-  query, where, serverTimestamp, updateDoc,
+  query, where, serverTimestamp, updateDoc, writeBatch, increment,
 } from 'firebase/firestore'
 
 const sha = s => createHash('sha256').update(s).digest('hex')
@@ -30,6 +31,8 @@ beforeEach(async () => {
   await env.withSecurityRulesDisabled(async ctx => {
     // One legacy entry with a random ID, like the documents already in production
     await setDoc(doc(ctx.firestore(), 'waitlist', 'legacyRandomId'), { name: 'Old', email: 'old@example.com', role: 'both' })
+    // The public count, seeded by the owner to match the entries already there
+    await setDoc(doc(ctx.firestore(), 'stats', 'waitlist'), { count: 1, last: '' })
     // Staff allow-list, as created by the owner in the Firebase console
     await setDoc(doc(ctx.firestore(), 'admins', 'staff@example.com'), { note: 'test admin' })
   })
@@ -74,6 +77,79 @@ describe('public visitor', () => {
     await assertFails(getDoc(doc(db(), 'admins', 'staff@example.com')))
     await assertFails(setDoc(doc(db(), 'admins', 'me@example.com'), { x: 1 }))
     await assertFails(setDoc(doc(db(), 'anything', 'x'), { a: 1 }))
+  })
+})
+
+// A sign-up as the site sends it: the entry and the count, in one write.
+function joinBatch(db, email, { by = 1, last } = {}) {
+  const batch = writeBatch(db)
+  batch.set(doc(db, 'waitlist', sha(email)), entry(email))
+  batch.update(doc(db, 'stats', 'waitlist'), { count: increment(by), last: last ?? sha(email) })
+  return batch
+}
+const countNow = async () => {
+  let n
+  await env.withSecurityRulesDisabled(async ctx => {
+    n = (await getDoc(doc(ctx.firestore(), 'stats', 'waitlist'))).data().count
+  })
+  return n
+}
+
+describe('public sign-up count (stats/waitlist)', () => {
+  const db = () => env.unauthenticatedContext().firestore()
+  const stats = d => doc(d, 'stats', 'waitlist')
+
+  test('anyone can read the count, but nothing else in stats', async () => {
+    await assertSucceeds(getDoc(stats(db())))
+    await assertFails(getDocs(collection(db(), 'stats')))
+    await assertFails(getDoc(doc(db(), 'stats', 'other')))
+  })
+  test('a new sign-up raises it by one in the same write', async () => {
+    await assertSucceeds(joinBatch(db(), 'alice@example.com').commit())
+    await assertSucceeds(joinBatch(db(), 'bob@example.com').commit())
+    assert.equal(await countNow(), 3)
+  })
+  test('a repeat sign-up does not count again', async () => {
+    await joinBatch(db(), 'alice@example.com').commit()
+    await assertFails(joinBatch(db(), 'alice@example.com').commit())
+    assert.equal(await countNow(), 2)
+  })
+  test('cannot be raised without a new sign-up', async () => {
+    await assertFails(updateDoc(stats(db()), { count: increment(1), last: sha('ghost@example.com') }))
+    await assertFails(updateDoc(stats(db()), { count: increment(1), last: 'legacyRandomId' }))
+    await joinBatch(db(), 'alice@example.com').commit()
+    await assertFails(updateDoc(stats(db()), { count: increment(1), last: sha('alice@example.com') }))
+  })
+  test('cannot be raised by more than one, set, lowered or given extra fields', async () => {
+    const d = db()
+    await assertFails(joinBatch(d, 'alice@example.com', { by: 2 }).commit())
+    await assertFails(joinBatch(d, 'bob@example.com', { by: -1 }).commit())
+    await assertFails(updateDoc(stats(d), { count: 1000 }))
+    const b = writeBatch(d)
+    b.set(doc(d, 'waitlist', sha('cat@example.com')), entry('cat@example.com'))
+    b.update(stats(d), { count: increment(1), last: sha('cat@example.com'), note: 'x' })
+    await assertFails(b.commit())
+    await assertFails(setDoc(stats(d), { count: 0, last: '' }))
+    await assertFails(deleteDoc(stats(d)))
+    assert.equal(await countNow(), 1)
+  })
+  test("one sign-up can't be counted under another's name", async () => {
+    await assertFails(joinBatch(db(), 'alice@example.com', { last: sha('bob@example.com') }).commit())
+  })
+  test('a sign-up without the count still works (older pages), it just is not counted', async () => {
+    await assertSucceeds(setDoc(doc(db(), 'waitlist', sha('dan@example.com')), entry('dan@example.com')))
+    assert.equal(await countNow(), 1)
+  })
+  test('staff lower it when they delete an entry; nobody else can', async () => {
+    const admin = env.authenticatedContext('admin1', google('staff@example.com')).firestore()
+    const b = writeBatch(admin)
+    b.delete(doc(admin, 'waitlist', 'legacyRandomId'))
+    b.update(stats(admin), { count: increment(-1) })
+    await assertSucceeds(b.commit())
+    assert.equal(await countNow(), 0)
+    await assertFails(updateDoc(stats(admin), { count: -1 }))
+    const other = env.authenticatedContext('u2', google('someone@gmail.com')).firestore()
+    await assertFails(updateDoc(stats(other), { count: 99 }))
   })
 })
 

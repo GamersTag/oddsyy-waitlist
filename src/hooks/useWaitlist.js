@@ -12,7 +12,8 @@ export function isValidEmail(email) {
   return e.length <= 254 && EMAIL_RE.test(e)
 }
 
-export function useWaitlist() {
+// onJoined runs after a new sign-up (not a repeat), e.g. to bump the shown count.
+export function useWaitlist({ onJoined } = {}) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(false)
@@ -37,6 +38,7 @@ export function useWaitlist() {
       const { saveSignup } = await import('../lib/signup')
       await saveSignup({ name: cleanName, email: cleanEmail, role })
       setSuccess(true)
+      onJoined?.()
     } catch (err) {
       if (err?.code === 'permission-denied') {
         setAlreadyJoined(true)

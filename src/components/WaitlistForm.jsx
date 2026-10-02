@@ -9,13 +9,13 @@ const ROLES = [
   { id: 'both',    icon: '✌️', name: 'Both',    sub: "I'm all in" },
 ]
 
-export default function WaitlistForm() {
+export default function WaitlistForm({ onJoined }) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [role, setRole] = useState('seeker')
   const [trap, setTrap] = useState('')
   const cardRef = useRef(null)
-  const { submit, loading, error, success, alreadyJoined } = useWaitlist()
+  const { submit, loading, error, success, alreadyJoined } = useWaitlist({ onJoined })
 
   function handleSubmit(e) {
     e.preventDefault()

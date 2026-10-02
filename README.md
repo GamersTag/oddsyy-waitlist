@@ -20,13 +20,22 @@ The landing page and waitlist for **Oddsyy**, the local task marketplace launchi
   Using the hash of the lower-cased email as the ID makes duplicates impossible: a second sign-up with the
   same email is an update, which the rules deny, and the form shows "You're already on the list".
 - **Nobody can read the waitlist from the website.** `firestore.rules` allows public *create* only.
-  (Rules can't tell a count query from a full list, so there is no public counter.)
+  (Rules can't tell a count query from a full list, so the count is kept in its own document.)
+- **"N people are already waiting"** is the real number from `stats/waitlist` — the only public document.
+  The sign-up and `count + 1` go in one write; the rules allow the increment only if `last` names a
+  sign-up that didn't exist before that write and does after it, so the count can't be inflated without
+  real sign-ups. If the counter write fails, the sign-up is saved on its own (the count can only fall
+  behind, never block anyone). `/admin` lowers it when deleting an entry. The page reads it with a plain
+  `fetch` to the Firestore REST API, so Firebase still isn't loaded up front. Hide small numbers with
+  `COUNT_SHOW_FROM` in `src/config.js`. If the count ever drifts, set `stats/waitlist.count` to the
+  number of documents in `waitlist` from the Firebase console.
 - **`/admin`** uses Google sign-in. Only Google accounts with a document in the private `admins`
   collection can read, export (CSV) or delete entries. There is no password in the app bundle.
 - **Anti-spam:** a hidden honeypot field; strict field validation in the rules.
 - **Security headers** (CSP, frame blocking, nosniff, referrer and permissions policies) are set in
   `firebase.json`.
-- Firebase is loaded only when someone submits the form or opens `/admin`, so the landing page stays light.
+- Firebase is loaded only when someone submits the form or opens `/admin`, so the landing page stays light
+  (the count is one small REST request).
 
 ## Develop
 
