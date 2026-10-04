@@ -26,11 +26,16 @@ The landing page and waitlist for **Oddsyy**, the local task marketplace launchi
   sign-up that didn't exist before that write and does after it, so the count can't be inflated without
   real sign-ups. If the counter write fails, the sign-up is saved on its own (the count can only fall
   behind, never block anyone). `/admin` lowers it when deleting an entry. The page reads it with a plain
-  `fetch` to the Firestore REST API, so Firebase still isn't loaded up front. Hide small numbers with
-  `COUNT_SHOW_FROM` in `src/config.js`. If the count ever drifts, set `stats/waitlist.count` to the
+  `fetch` to the Firestore REST API, so Firebase still isn't loaded up front. It only appears once the
+  real count reaches `COUNT_SHOW_FROM` in `src/config.js` (currently 1,001); below that, nothing is shown.
+  It is never a placeholder number. If the count ever drifts, set `stats/waitlist.count` to the
   number of documents in `waitlist` from the Firebase console.
 - **`/admin`** uses Google sign-in. Only Google accounts with a document in the private `admins`
   collection can read, export (CSV) or delete entries. There is no password in the app bundle.
+- **Motion** lives in `src/lib/motion.js`: the hero builds in on load, sections and cards ease in as they
+  scroll into view, the background glows drift with parallax, and Lenis smooths wheel scrolling. Hover effects
+  are CSS (bottom of `src/index.css`) and use the `translate`/`scale`/`rotate` properties so they never fight
+  GSAP's `transform`. With *reduce motion* switched on in the OS, all of it is off and the page is static.
 - **Anti-spam:** a hidden honeypot field; strict field validation in the rules.
 - **Security headers** (CSP, frame blocking, nosniff, referrer and permissions policies) are set in
   `firebase.json`.

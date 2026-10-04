@@ -10,6 +10,9 @@ export default function WaitingCount({ count }) {
   const rootRef = useRef(null)
   const numRef = useRef(null)
   const shown = useRef(null)
+  const mountedAt = useRef(0)
+
+  useEffect(() => { mountedAt.current = performance.now() }, [])
 
   const visible = count !== null && count >= COUNT_SHOW_FROM
 
@@ -18,12 +21,12 @@ export default function WaitingCount({ count }) {
     const el = numRef.current
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     if (shown.current === null) {
-      // First appearance: fade in and count up from zero, after the hero's own
-      // reveal has brought in the chips above (about 1 s after the page starts).
+      // First appearance: fade in and count up from zero, after the hero's load
+      // animation has brought in the chips above (about 1.5 s after mounting).
       if (reduce) {
         el.textContent = fmt(count)
       } else {
-        const delay = Math.max(0, 1 - performance.now() / 1000)
+        const delay = Math.max(0, 1.5 - (performance.now() - mountedAt.current) / 1000)
         gsap.fromTo(rootRef.current, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.8, delay, ease: 'power3.out' })
         const n = { v: 0 }
         el.textContent = '0'

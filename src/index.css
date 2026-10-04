@@ -23,7 +23,6 @@
 
 /* ─── Reset ─── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
 body {
   background: var(--page);
   color: var(--ink);
@@ -212,18 +211,16 @@ body {
   .waiting-dot::after { animation: none; }
 }
 
-/* ─── Reveal animations (GSAP initial state) ─── */
-.reveal {
-  opacity: 0;
-  transform: translateY(28px);
-  will-change: transform, opacity;
+.hero-form { flex-shrink: 0; }
+
+/* Hero title: each line is a mask its text slides up through on load. */
+.hero-title .line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.12em;
+  margin-bottom: -0.12em;
 }
-.reveal-scale {
-  opacity: 0;
-  transform: scale(0.96);
-  flex-shrink: 0;
-  will-change: transform, opacity;
-}
+.hero-title .line-in { display: inline-block; }
 
 /* ─── Form card ─── */
 .form-card {
@@ -296,7 +293,7 @@ body {
   border-radius: 15px;
   padding: 0.8rem 0.5rem;
   cursor: pointer;
-  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease, transform 0.15s cubic-bezier(0.34,1.56,0.64,1);
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease, scale 0.15s cubic-bezier(0.34,1.56,0.64,1);
   color: var(--wine);
   font-family: inherit;
 }
@@ -304,9 +301,9 @@ body {
   background: var(--maroon);
   border-color: var(--maroon);
   color: var(--cream);
-  transform: scale(1.03);
+  scale: 1.03;
 }
-.role-btn:hover:not(.active) { border-color: var(--line-2); transform: scale(1.02); }
+.role-btn:hover:not(.active) { border-color: var(--line-2); scale: 1.02; }
 .rb-icon { font-size: 1.3rem; line-height: 1; }
 .rb-name { font-family: var(--display); font-size: 0.85rem; font-weight: 700; }
 .rb-sub  { font-size: 0.68rem; opacity: 0.78; text-align: center; }
@@ -443,8 +440,6 @@ body {
   border: 1px solid var(--line);
   border-radius: 18px;
   padding: 1.6rem;
-  opacity: 0;
-  transform: translateY(24px);
 }
 .how-num {
   font-family: var(--display);
@@ -475,8 +470,6 @@ body {
   gap: 0.6rem;
   cursor: default;
   transition: border-color 0.2s, background 0.2s, transform 0.2s;
-  opacity: 0;
-  transform: translateY(20px);
 }
 .cat-card:hover {
   border-color: var(--line-2);
@@ -499,8 +492,6 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
-  opacity: 0;
-  transform: translateY(20px);
   transition: border-color 0.25s, box-shadow 0.25s;
 }
 .ex-card:hover {
@@ -748,7 +739,7 @@ body {
     align-items: flex-start;
   }
   .hero-mascot { width: 88px; }
-  .reveal-scale { width: 100%; }
+  .hero-form { width: 100%; }
   .form-card { width: 100%; }
   .section { padding: 3.5rem 1.25rem; }
   .cat-grid { grid-template-columns: repeat(3, 1fr); }
@@ -762,4 +753,78 @@ body {
 @media (max-width: 560px) {
   .nav-pill { display: none; }
   .cat-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ─── Motion: scroll states, ambient drift and hover ───────────────────────
+   GSAP owns `transform` on revealed elements, so hover effects use the
+   separate `translate` / `scale` / `rotate` properties and never fight it. */
+.nav { transition: background 0.4s ease, box-shadow 0.4s ease, padding 0.4s ease; }
+.nav.is-scrolled {
+  background: rgba(246, 239, 231, 0.94);
+  box-shadow: 0 10px 30px -18px rgba(46, 10, 21, 0.35);
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+.ambient-1 { animation: drift-a 18s ease-in-out infinite alternate; }
+.ambient-2 { animation: drift-b 22s ease-in-out infinite alternate; }
+@keyframes drift-a { from { translate: 0 0; } to { translate: -60px 50px; } }
+@keyframes drift-b { from { translate: 0 0; } to { translate: 70px -40px; } }
+
+.hero-mascot, .footer-mascot, .nav-brand svg {
+  transform-origin: 50% 90%;
+  transition: rotate 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.proof-chip, .nav-pill, .how-card, .cat-card, .ex-card, .eyebrow {
+  transition: translate 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease,
+    border-color 0.25s ease, background 0.25s ease, color 0.25s ease;
+}
+.cat-emoji, .how-num { display: inline-block; transition: scale 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), rotate 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.25s ease; }
+.footer-text a, .form-note a {
+  text-decoration: none;
+  background: linear-gradient(currentColor, currentColor) 0 100% / 100% 1px no-repeat;
+  transition: background-size 0.3s ease;
+}
+
+/* The submit button: a soft sheen sweeps across on hover. */
+.submit-btn { position: relative; overflow: hidden; }
+.submit-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.45) 50%, transparent 65%);
+  translate: -120% 0;
+  pointer-events: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nav-brand:hover svg { rotate: -10deg; }
+  .hero-mascot:hover { rotate: -8deg; }
+  .footer-mascot:hover { rotate: 8deg; }
+  .nav-pill:hover { translate: 0 -2px; box-shadow: 0 8px 18px -10px rgba(90, 18, 38, 0.35); }
+  .eyebrow:hover { translate: 0 -2px; }
+  .proof-chip:hover {
+    translate: 0 -3px;
+    background: rgba(217, 87, 122, 0.18);
+    color: var(--rose-deep);
+    box-shadow: 0 8px 16px -10px rgba(180, 58, 96, 0.5);
+  }
+  .how-card:hover {
+    translate: 0 -6px;
+    border-color: var(--line-2);
+    box-shadow: 0 22px 40px -24px rgba(46, 10, 21, 0.45);
+  }
+  .how-card:hover .how-num { scale: 1.12; rotate: -6deg; color: var(--rose-deep); }
+  .cat-card:hover { translate: 0 -5px; box-shadow: 0 16px 28px -20px rgba(46, 10, 21, 0.45); }
+  .cat-card:hover .cat-emoji { scale: 1.25; rotate: -10deg; }
+  .ex-card:hover { translate: 0 -5px; }
+  .submit-btn:hover:not(:disabled)::after { translate: 120% 0; transition: translate 0.8s ease; }
+  .footer-text a:hover, .form-note a:hover { background-size: 0 1px; }
+  .marquee-wrap:hover .marquee-track { animation-play-state: paused; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient-1, .ambient-2 { animation: none; }
+  .marquee-track { animation-duration: 120s; }
+  *, *::before, *::after { transition-duration: 0.01ms !important; }
 }

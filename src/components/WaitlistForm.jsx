@@ -29,7 +29,8 @@ export default function WaitlistForm({ onJoined }) {
 
   function pickRole(el, id) {
     setRole(id)
-    gsap.fromTo(el, { scale: 0.95 }, { scale: 1, duration: 0.3, ease: 'back.out(2)' })
+    // clearProps hands scale back to CSS (.role-btn.active / :hover) when done
+    gsap.fromTo(el, { scale: 0.95 }, { scale: 1, duration: 0.3, ease: 'back.out(2)', clearProps: 'transform' })
   }
 
   if (success) return (

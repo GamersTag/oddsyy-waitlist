@@ -1,8 +1,3 @@
-import { useEffect, useRef } from 'react'
-import { gsap } from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-gsap.registerPlugin(ScrollTrigger)
-
 const EXAMPLES = [
   { tag: 'brand', cat: 'Tutoring',      title: 'Home school teacher for Grade 3',                     desc: 'Full-time Mon–Fri. English, Math, Urdu. Must come to our home in Wapda Town.',             budget: 'PKR 25,000 – 40,000' },
   { tag: 'brand', cat: 'Home Services', title: 'Painter for 2 bedroom apartment',                     desc: 'White walls, clean finish. Paint provided. Johar Town, Lahore.',                           budget: 'PKR 8,000 – 18,000'  },
@@ -19,15 +14,9 @@ const EXAMPLES = [
 ]
 
 export default function Examples() {
-  const ref = useRef(null)
-  useEffect(() => {
-    ref.current.querySelectorAll('.ex-card').forEach((card, i) => {
-      gsap.to(card, { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out', delay: (i % 4) * 0.07, scrollTrigger: { trigger: card, start: 'top 90%' } })
-    })
-  }, [])
   return (
     <section className="section" style={{ paddingTop: 0 }}>
-      <div className="section-inner" ref={ref}>
+      <div className="section-inner">
         <p className="s-label">Example requests</p>
         <h2 className="s-title">From everyday<br /><em>to unexpected.</em></h2>
         <div className="ex-grid">
