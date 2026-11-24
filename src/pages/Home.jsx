@@ -2,25 +2,28 @@ import { useRef } from 'react'
 import Nav from '../components/Nav'
 import Hero from '../components/Hero'
 import Marquee from '../components/Marquee'
-import HowItWorks from '../components/HowItWorks'
+import Story from '../components/Story'
 import Categories from '../components/Categories'
 import Examples from '../components/Examples'
+import Closing from '../components/Closing'
 import Footer from '../components/Footer'
-import { useHomeMotion } from '../lib/motion'
+import { usePageMotion } from '../lib/motion'
+import '../home.css'
 
 export default function Home() {
   const scope = useRef(null)
-  useHomeMotion(scope)
+  usePageMotion(scope)
   return (
-    <div ref={scope}>
-      <div className="ambient ambient-1" />
-      <div className="ambient ambient-2" />
+    <div className="home" ref={scope}>
       <Nav />
-      <Hero />
-      <Marquee />
-      <HowItWorks />
-      <Categories />
-      <Examples />
+      <main>
+        <Hero />
+        <Marquee />
+        <Story />
+        <Categories />
+        <Examples />
+        <Closing />
+      </main>
       <Footer />
     </div>
   )

@@ -32,10 +32,26 @@ The landing page and waitlist for **Oddsyy**, the local task marketplace launchi
   number of documents in `waitlist` from the Firebase console.
 - **`/admin`** uses Google sign-in. Only Google accounts with a document in the private `admins`
   collection can read, export (CSV) or delete entries. There is no password in the app bundle.
-- **Motion** lives in `src/lib/motion.js`: the hero builds in on load, sections and cards ease in as they
-  scroll into view, the background glows drift with parallax, and Lenis smooths wheel scrolling. Hover effects
-  are CSS (bottom of `src/index.css`) and use the `translate`/`scale`/`rotate` properties so they never fight
-  GSAP's `transform`. With *reduce motion* switched on in the OS, all of it is off and the page is static.
+- **Motion:** shared helpers are in `src/lib/motion.js` (Lenis smooth scrolling, the nav's states, the "hop" the
+  headings use, the sheet that slides over the hero); each section's own animation sits in its component.
+  Scrolling only decides *when* something starts; it then plays to the end by itself. The one exception is the
+  hero and the phone scene leaning back while the next sheet slides over them (`data-lean`).
+  With *reduce motion* switched on in the OS all of it is off and every section shows its finished state.
+  - **Opening** (`Opening.jsx`): once per visit, about two seconds. Not on reloads or trips back.
+  - **Hero** (`HeroAsk.jsx`, `lib/notes.js`): example requests (`ASKS` in `src/data/content.js`, labelled "Example
+    request") are typed, fly to the pile behind the form and get stamped. A real sign-up adds the visitor's own note.
+  - **How it works** (`Story.jsx`, `Phone.jsx`): one pinned scene, 540svh tall. The last 100svh is spare, for the
+    next sheet to slide over. The phone is HTML drawn from the app's screens.
+  - **Requests** (`Examples.jsx`): the wheel. Drag, click, buttons, or leave it and it turns by itself (it waits
+    while the mouse is on it). With reduced motion it's a plain grid.
+  - **Lahore** (`Closing.jsx`, `Skyline.jsx`): tilework letters and a skyline drawn in code.
+  - **Footer** (`PoweredBy.jsx`): the BunnyDevs bunny hops over the words and back along the ground.
+  - GSAP absorbs CSS `translate`/`rotate`/`scale` into its own transform, so don't animate an element that also
+    positions itself with those: move an inner element instead.
+- **Photos** (`src/assets/photos`) are Pexels images, cropped and compressed to WebP. Check a photo for other
+  companies' logos before adding it. Photographers: MART PRODUCTION, ranjeet ., Ahmet Kurt, RDNE Stock project,
+  Jesus Arias, Towfiqu barbhuiya, Razia Sultana Tuli, Iqbal Khattak, Adnan Mughal, Shyamli Kashyap,
+  Elements Interactive, Kampus Production, Saveurs Secretes, Aa Dil.
 - **Anti-spam:** a hidden honeypot field; strict field validation in the rules.
 - **Security headers** (CSP, frame blocking, nosniff, referrer and permissions policies) are set in
   `firebase.json`.

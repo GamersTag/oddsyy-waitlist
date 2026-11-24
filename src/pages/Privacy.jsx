@@ -4,6 +4,7 @@ import { CONTACT_EMAIL, PRIVACY_UPDATED } from '../config'
 
 export default function Privacy() {
   useEffect(() => {
+    window.scrollTo(0, 0)
     const prev = document.title
     document.title = 'Privacy notice — Oddsyy waitlist'
     return () => { document.title = prev }
